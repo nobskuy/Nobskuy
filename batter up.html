@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Sharing Example</title>
+    <style>
+        /* Gaya untuk form dan elemen video */
+        #screen-sharing-form {
+            max-width: 300px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        video {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="screen-sharing-form">
+        <button onclick="startScreenSharing()">Start Screen Sharing</button>
+    </div>
+
+    <script>
+        async function startScreenSharing() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({ video: { mediaSource: 'screen' } });
+
+                // Menampilkan layar pada elemen video
+                let videoElement = document.createElement('video');
+                videoElement.srcObject = stream;
+                videoElement.autoplay = true;
+
+                // Menambahkan videoElement ke DOM
+                document.body.appendChild(videoElement);
+
+                // Mengecek apakah browser mendukung mediaRecorder
+                if (typeof MediaRecorder !== 'undefined') {
+                    // Merekam layar menggunakan mediaRecorder
+                    let mediaRecorder = new MediaRecorder(stream);
+                    let chunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            chunks.push(event.data);
+                        }
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        // Menggabungkan chunk menjadi blob
+                        let recordedBlob = new Blob(chunks, { type: 'video/webm' });
+
+                        // Membuat URL objek untuk blob
+                        let url = URL.createObjectURL(recordedBlob);
+
+                        // Membuat elemen video untuk memainkan rekaman
+                        let recordedVideo = document.createElement('video');
+                        recordedVideo.src = url;
+                        recordedVideo.controls = true;
+
+                        // Menambahkan recordedVideo ke DOM
+                        document.body.appendChild(recordedVideo);
+                    };
+
+                    // Mulai merekam
+                    mediaRecorder.start();
+
+                    // Memberhentikan merekam setelah beberapa detik (opsional)
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 5000); // Memberhentikan merekam setelah 5 detik (opsional)
+                }
+            } catch (error) {
+                console.error('Error accessing screen:', error);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
